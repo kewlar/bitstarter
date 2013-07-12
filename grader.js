@@ -55,7 +55,7 @@ var checkHtmlFile = function(htmlfile, checksfile) {
 var checkUrl = function(url, checksfile) {
     restler.get(url.toString())
         .on('complete', function(result) {
-            if (result instanceOf Error) {
+            if (result instanceof Error) {
                 console.log("%s could not be loaded. Exiting.", url);
                 process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code
             } else {
@@ -92,12 +92,7 @@ if(require.main == module) {
         .option('-u, --url [html_file]', 'URL to index.html')
         .parse(process.argv);
     if (program.url) {
-        if (program.file) {
-            console.log("I can grade either a file (%s), or an URL (%s). Make up your mind.", program.file, program.url);
-            process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code
-        } else {
-            checkUrl(program.url, program.checks);
-        }
+        checkUrl(program.url, program.checks);
     } else {
         var checkJson = checkHtmlFile(program.file, program.checks);
         var outJson = JSON.stringify(checkJson, null, 4);
