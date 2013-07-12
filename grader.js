@@ -24,6 +24,7 @@ References:
 var fs = require('fs');
 var program = require('commander');
 var cheerio = require('cheerio');
+var restler = require('restler');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
 
@@ -47,11 +48,34 @@ var loadChecks = function(checksfile) {
 var checkHtmlFile = function(htmlfile, checksfile) {
     $ = cheerioHtmlFile(htmlfile);
     var checks = loadChecks(checksfile).sort();
+
+    return getCheerioChecks($, checks);
+};
+
+var checkUrl = function(url, checksfile) {
+    restler.get(url.toString())
+        .on('complete', function(result) {
+            if (result instanceOf Error) {
+                console.log("%s could not be loaded. Exiting.", url);
+                process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code
+            } else {
+                $ = cheerio.load(result);
+                var checks = loadChecks(checksfile).sort();
+
+                var checkJson = getCheerioChecks($, checks);
+                var outJson = JSON.stringify(checkJson, null, 4);
+                console.log(outJson);
+            }
+        });
+};
+
+var getCheerioChecks = function($, checks) {
     var out = {};
     for(var ii in checks) {
         var present = $(checks[ii]).length > 0;
         out[checks[ii]] = present;
     }
+
     return out;
 };
 
@@ -63,12 +87,23 @@ var clone = function(fn) {
 
 if(require.main == module) {
     program
-        .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
-        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-c, --checks [check_file]', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
+        .option('-f, --file [html_file]', 'Path to index.html, or', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-u, --url [html_file]', 'URL to index.html')
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
-    var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
+    if (program.url) {
+        if (program.file) {
+            console.log("I can grade either a file (%s), or an URL (%s). Make up your mind.", program.file, program.url);
+            process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code
+        } else {
+            checkUrl(program.url, program.checks);
+        }
+    } else {
+        var checkJson = checkHtmlFile(program.file, program.checks);
+        var outJson = JSON.stringify(checkJson, null, 4);
+        console.log(outJson);
+    }
 } else {
     exports.checkHtmlFile = checkHtmlFile;
+    exports.checkUrl = checkUrl;
 }
