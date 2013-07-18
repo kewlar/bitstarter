@@ -15,6 +15,12 @@ sudo apt-get install -y nodejs npm
 #nvm install v0.10.12
 #nvm use v0.10.12
 
+# sudo apt-get install python-software-properties python g++ make
+# sudo add-apt-repository ppa:chris-lea/node.js
+# sudo apt-get update
+# sudo apt-get install nodejs
+# sudo npm install --global --verbose express
+
 # Install jshint to allow checking of JS code within emacs
 # http://jshint.com/
 npm install -g jshint
